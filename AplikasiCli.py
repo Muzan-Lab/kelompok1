@@ -108,7 +108,7 @@ def pinjam_barang():
     print_table(barang, ["ID Barang", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
 
     try:
-        barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin dipinjam: {Fore.RESET}"))
+        barang_id = int(input (f"{Fore.CYAN}Masukkan ID Barang yang ingin dipinjam: {Fore.RESET}"))
     except ValueError:
         print(f"{Fore.RED}ID Barang harus berupa angka.{Fore.RESET}")
         return
@@ -148,10 +148,11 @@ def pinjam_barang():
     popup_notification("Barang berhasil dipinjam!")
 
 # Fungsi untuk mencetak struk pengembalian
-def print_receipt(peminjaman_id, tanggal_kembali):
+def print_receipt(peminjaman_id, tanggal_kembali, kondisi_barang):
     print(f"{Fore.GREEN}=== STRUK PENGEMBALIAN ==={Fore.RESET}")
     print(f"ID Peminjaman: {peminjaman_id}")
     print(f"Tanggal Kembali: {tanggal_kembali}")
+    print(f"Kondisi Barang: {kondisi_barang}")  # Display the condition of the item
     print(f"{Fore.GREEN}=========================={Fore.RESET}")
 
 # Fungsi untuk mengembalikan barang
@@ -178,27 +179,28 @@ def kembalikan_barang():
         return
 
     tanggal_kembali = input(f"{Fore.CYAN}Masukkan Tanggal Kembali (YYYY-MM-DD): {Fore.RESET}")
+    kondisi_barang = input(f"{Fore.CYAN}Masukkan Kondisi Barang saat Dikembalikan: {Fore.RESET}")  # New line to get kondisi_barang
     
     conn = connect_db()
     if conn is None:
         return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
     
-    # Memperbarui tanggal kembali
-    cursor.execute("UPDATE peminjaman SET tanggal_kembali = %s WHERE peminjaman_id = %s", 
-                   (tanggal_kembali, peminjaman_id))
+    # Memperbarui tanggal kembali dan kondisi barang
+    cursor.execute("UPDATE peminjaman SET tanggal_kembali = %s, kondisi_barang = %s WHERE peminjaman_id = %s", 
+                   (tanggal_kembali, kondisi_barang, peminjaman_id))
     
     # Menambah jumlah barang
     cursor.execute("UPDATE barang SET jumlah = jumlah + 1 WHERE barang_id = (SELECT barang_id FROM peminjaman WHERE peminjaman_id = %s)", (peminjaman_id,))
     
-    conn.commit()
+    conn.commit
     conn.close()
     
     success_message("Barang berhasil dikembalikan!")
     popup_notification("Barang berhasil dikembalikan!")
     
     # Cetak struk setelah pengembalian
-    print_receipt(peminjaman_id, tanggal_kembali)
+    print_receipt(peminjaman_id, tanggal_kembali, kondisi_barang)  # Pass kondisi_barang to print_receipt
 
 # Fungsi untuk menampilkan barang yang tersedia
 def lihat_barang_tersedia():
@@ -244,8 +246,8 @@ def manage_peminjam():
             cursor.execute("SELECT * FROM peminjam")
             peminjam = cursor.fetchall()
             conn.close()
-            print_table(peminjam, ["ID Peminjam", "Nama", "NIM", "No Telepon", "Email", "Alamat", "Kondisi Barang"])
-        
+            print_table(peminjam, ["ID Peminjam", "Nama", "NIM", "No Telepon", "Email", "Alamat"])
+
         elif peminjam_choice == '2':
             # Hapus data peminjam berdasarkan ID
             try:
