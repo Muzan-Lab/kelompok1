@@ -116,6 +116,7 @@ def pinjam_barang():
     nama_peminjam = input(f"{Fore.CYAN}Masukkan Nama Peminjam: {Fore.RESET}")
     nim_peminjam = input(f"{Fore.CYAN}Masukkan NIM Peminjam: {Fore.RESET}")
     tanggal_pinjam = input(f"{Fore.CYAN}Masukkan Tanggal Pinjam (YYYY-MM-DD): {Fore.RESET}")
+    kondisi_barang = input(f"{Fore.CYAN}Masukkan Kondisi Barang: {Fore.RESET}")  # New line to get kondisi_barang
 
     conn = connect_db()
     if conn is None:
@@ -137,8 +138,9 @@ def pinjam_barang():
         conn.close()
         return
 
-    # Tambahkan data peminjaman
-    cursor.execute("INSERT INTO peminjaman (peminjam_id, barang_id, tanggal_pinjam) VALUES (%s, %s, %s)", (peminjam[0], barang_id, tanggal_pinjam))
+    # Tambahkan data peminjaman, including kondisi_barang
+    cursor.execute("INSERT INTO peminjaman (peminjam_id, barang_id, tanggal_pinjam, kondisi_barang) VALUES (%s, %s, %s, %s)", 
+                   (peminjam[0], barang_id, tanggal_pinjam, kondisi_barang))
     conn.commit()
     conn.close()
 
@@ -242,7 +244,7 @@ def manage_peminjam():
             cursor.execute("SELECT * FROM peminjam")
             peminjam = cursor.fetchall()
             conn.close()
-            print_table(peminjam, ["ID Peminjam", "Nama", "NIM", "No Telepon", "Email", "Alamat"])
+            print_table(peminjam, ["ID Peminjam", "Nama", "NIM", "No Telepon", "Email", "Alamat", "Kondisi Barang"])
         
         elif peminjam_choice == '2':
             # Hapus data peminjam berdasarkan ID
