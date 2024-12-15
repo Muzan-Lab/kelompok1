@@ -27,3 +27,7 @@ CREATE TABLE IF NOT EXISTS peminjaman (
     FOREIGN KEY (peminjam_id) REFERENCES peminjam(peminjam_id),
     FOREIGN KEY (barang_id) REFERENCES barang(barang_id)
 );
+
+INSERT INTO barang (barang_id, nama_barang, kategori, jumlah, kondisi) VALUES
+(1, 'MikroTik', 'Fasilitas Praktikum', 10, 'Baik'),
+(2, 'Infocus', 'Fasilitas Prodi', 2, 'Baik');
