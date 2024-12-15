@@ -1,5 +1,5 @@
--- Buat Tabel peminjam
-CREATE TABLE peminjam (
+-- Buat tabel peminjam
+CREATE TABLE IF NOT EXISTS peminjam (
     peminjam_id INT AUTO_INCREMENT PRIMARY KEY,
     nama VARCHAR(100) NOT NULL,
     nim VARCHAR(20) NOT NULL,
@@ -8,8 +8,8 @@ CREATE TABLE peminjam (
     alamat TEXT NOT NULL
 );
 
--- Buat Tabel barang
-CREATE TABLE barang (
+-- Buat tabel barang
+CREATE TABLE IF NOT EXISTS barang (
     barang_id INT AUTO_INCREMENT PRIMARY KEY,
     nama_barang VARCHAR(100) NOT NULL,
     kategori VARCHAR(50) NOT NULL,
@@ -17,8 +17,8 @@ CREATE TABLE barang (
     kondisi VARCHAR(50) NOT NULL
 );
 
--- Buat Tabel peminjaman
-CREATE TABLE peminjaman (
+-- Buat tabel peminjaman
+CREATE TABLE IF NOT EXISTS peminjaman (
     peminjaman_id INT AUTO_INCREMENT PRIMARY KEY,
     peminjam_id INT NOT NULL,
     barang_id INT NOT NULL,

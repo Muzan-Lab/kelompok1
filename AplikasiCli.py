@@ -7,12 +7,16 @@ import pyttsx3  # Untuk suara pemberitahuan (opsional)
 
 # Fungsi untuk koneksi ke database
 def connect_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="AKUNaku12.",
-        database="laboratorium"
-    )
+    try:
+        return mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="AKUNaku12.",
+            database="laboratorium"
+        )
+    except mysql.connector.Error as err:
+        print(f"{Fore.RED}Error: {err}{Fore.RESET}")
+        return None
 
 # Fungsi untuk menampilkan tabel dengan tabulate
 def print_table(data, headers):
@@ -80,6 +84,8 @@ def daftar_peminjam():
     alamat = input(f"{Fore.CYAN}Masukkan Alamat: {Fore.RESET}")
     
     conn = connect_db()
+    if conn is None:
+        return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
     cursor.execute("INSERT INTO peminjam (nama, nim, no_telepon, email, alamat) VALUES (%s, %s, %s, %s, %s)", 
                    (nama, nim, no_telepon, email, alamat))
@@ -93,23 +99,49 @@ def daftar_peminjam():
 def pinjam_barang():
     print(f"{Fore.YELLOW}Daftar Barang Tersedia:{Fore.RESET}")
     conn = connect_db()
+    if conn is None:
+        return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM barang WHERE jumlah > 0")
     barang = cursor.fetchall()
     conn.close()
-    print_table(barang, ["ID", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
-    
-    barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin dipinjam: {Fore.RESET}"))
-    peminjam_id = input(f"{Fore.CYAN}Masukkan ID Peminjam: {Fore.RESET}")
-    tanggal_pinjam = input(f"{Fore.CYAN}Masukkan Tanggal Pinjam (YYYY-MM-DD ): {Fore.RESET}")
-    
+    print_table(barang, ["ID Barang", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
+
+    try:
+        barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin dipinjam: {Fore.RESET}"))
+    except ValueError:
+        print(f"{Fore.RED}ID Barang harus berupa angka.{Fore.RESET}")
+        return
+
+    nama_peminjam = input(f"{Fore.CYAN}Masukkan Nama Peminjam: {Fore.RESET}")
+    nim_peminjam = input(f"{Fore.CYAN}Masukkan NIM Peminjam: {Fore.RESET}")
+    tanggal_pinjam = input(f"{Fore.CYAN}Masukkan Tanggal Pinjam (YYYY-MM-DD): {Fore.RESET}")
+
     conn = connect_db()
+    if conn is None:
+        return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO peminjaman (peminjam_id, barang_id, tanggal_pinjam) VALUES (%s, %s, %s)", 
-                   (peminjam_id, barang_id, tanggal_pinjam))
+
+    # Cek apakah peminjam sudah terdaftar
+    cursor.execute("SELECT * FROM peminjam WHERE nama = %s AND nim = %s", (nama_peminjam, nim_peminjam))
+    peminjam = cursor.fetchone()
+    if peminjam is None:
+        print(f"{Fore.RED}Peminjam belum terdaftar! Silakan daftar terlebih dahulu.{Fore.RESET}")
+        conn.close()
+        return
+
+    # Memperbarui jumlah barang
+    cursor.execute("UPDATE barang SET jumlah = jumlah - 1 WHERE barang_id = %s AND jumlah > 0", (barang_id,))
+    if cursor.rowcount == 0:
+        print(f"{Fore.RED}Barang tidak tersedia untuk dipinjam.{Fore.RESET}")
+        conn.close()
+        return
+
+    # Tambahkan data peminjaman
+    cursor.execute("INSERT INTO peminjaman (peminjam_id, barang_id, tanggal_pinjam) VALUES (%s, %s, %s)", (peminjam[0], barang_id, tanggal_pinjam))
     conn.commit()
     conn.close()
-    
+
     success_message("Barang berhasil dipinjam!")
     popup_notification("Barang berhasil dipinjam!")
 
@@ -122,21 +154,41 @@ def print_receipt(peminjaman_id, tanggal_kembali):
 
 # Fungsi untuk mengembalikan barang
 def kembalikan_barang():
-    print(f"{Fore.YELLOW}Daftar Peminjaman Barang:{Fore.RESET}")
+    print(f"{Fore.YELLOW}Daftar Peminjaman Barang yang Belum Dikembalikan:{Fore.RESET}")
     conn = connect_db()
+    if conn is None:
+        return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM peminjaman WHERE tanggal_kembali IS NULL")
     peminjaman = cursor.fetchall()
     conn.close()
-    print_table(peminjaman, ["ID", "Peminjam ID", "Barang ID", "Tanggal Pinjam"])
     
-    peminjaman_id = int(input(f"{Fore.CYAN}Masukkan ID Peminjaman yang ingin dikembalikan: {Fore.RESET}"))
+    if not peminjaman:
+        print(f"{Fore.RED}Tidak ada peminjaman yang belum dikembalikan.{Fore.RESET}")
+        return
+    
+    print_table(peminjaman, ["Peminjaman ID", "Peminjam ID", "Barang ID", "Tanggal Pinjam","Tanggal Kembali"])
+    
+    try:
+        peminjaman_id = int(input(f"{Fore.CYAN}Masukkan ID Peminjaman yang ingin dikembalikan: {Fore.RESET}"))
+    except ValueError:
+        print(f"{Fore.RED}ID Peminjaman harus berupa angka.{Fore.RESET}")
+        return
+
     tanggal_kembali = input(f"{Fore.CYAN}Masukkan Tanggal Kembali (YYYY-MM-DD): {Fore.RESET}")
     
     conn = connect_db()
+    if conn is None:
+        return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
+    
+    # Memperbarui tanggal kembali
     cursor.execute("UPDATE peminjaman SET tanggal_kembali = %s WHERE peminjaman_id = %s", 
                    (tanggal_kembali, peminjaman_id))
+    
+    # Menambah jumlah barang
+    cursor.execute("UPDATE barang SET jumlah = jumlah + 1 WHERE barang_id = (SELECT barang_id FROM peminjaman WHERE peminjaman_id = %s)", (peminjaman_id,))
+    
     conn.commit()
     conn.close()
     
@@ -150,11 +202,13 @@ def kembalikan_barang():
 def lihat_barang_tersedia():
     print(f"{Fore.YELLOW}Daftar Barang Tersedia untuk Dipinjam:{Fore.RESET}")
     conn = connect_db()
+    if conn is None:
+        return  # Kembali jika koneksi gagal
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM barang WHERE jumlah > 0")
     barang = cursor.fetchall()
     conn.close()
-    print_table(barang, ["ID", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
+    print_table(barang, ["ID Barang", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
 
 # Fungsi untuk menu admin
 def manage_admin():
@@ -182,16 +236,25 @@ def manage_peminjam():
             # Menampilkan daftar peminjam
             print(f"{Fore.YELLOW}Daftar Peminjam:{Fore.RESET}")
             conn = connect_db()
+            if conn is None:
+                return  # Kembali jika koneksi gagal
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM peminjam")
             peminjam = cursor.fetchall()
             conn.close()
-            print_table(peminjam, ["ID", "Nama", "NIM", "No Telepon", "Email", "Alamat"])
+            print_table(peminjam, ["ID Peminjam", "Nama", "NIM", "No Telepon", "Email", "Alamat"])
         
         elif peminjam_choice == '2':
             # Hapus data peminjam berdasarkan ID
-            peminjam_id = int(input(f"{Fore.CYAN}Masukkan ID Peminjam yang ingin dihapus: {Fore.RESET}"))
+            try:
+                peminjam_id = int(input(f"{Fore.CYAN}Masukkan ID Peminjam yang ingin dihapus: {Fore.RESET}"))
+            except ValueError:
+                print(f"{Fore.RED}ID Peminjam harus berupa angka.{Fore.RESET}")
+                continue
+            
             conn = connect_db()
+            if conn is None:
+                return  # Kembali jika koneksi gagal
             cursor = conn.cursor()
             cursor.execute("DELETE FROM peminjam WHERE peminjam_id = %s", (peminjam_id,))
             conn.commit()
@@ -218,19 +281,27 @@ def manage_barang():
         if barang_choice == '1':
             print(f"{Fore.YELLOW}Daftar Barang:{Fore.RESET}")
             conn = connect_db()
+            if conn is None:
+                return  # Kembali jika koneksi gagal
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM barang")
             barang = cursor.fetchall()
             conn.close()
-            print_table(barang, ["ID", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
+            print_table(barang, ["ID Barang", "Nama Barang", "Kategori", "Jumlah", "Kondisi"])
 
         elif barang_choice == '2':
             # Menambah barang baru
             nama_barang = input(f"{Fore.CYAN}Masukkan Nama Barang: {Fore.RESET}")
             kategori = input(f"{Fore.CYAN}Masukkan Kategori: {Fore.RESET}")
-            jumlah = int(input(f"{Fore.CYAN}Masukkan Jumlah: {Fore.RESET}"))
+            try:
+                jumlah = int(input(f"{Fore.CYAN}Masukkan Jumlah: {Fore.RESET}"))
+            except ValueError:
+                print(f"{Fore.RED}Jumlah harus berupa angka.{Fore.RESET}")
+                continue
             kondisi = input(f"{Fore.CYAN}Masukkan Kondisi: {Fore.RESET}")
             conn = connect_db()
+            if conn is None:
+                return  # Kembali jika koneksi gagal
             cursor = conn.cursor()
             cursor.execute("INSERT INTO barang (nama_barang, kategori, jumlah, kondisi) VALUES (%s, %s, %s, %s)", (nama_barang, kategori, jumlah, kondisi))
             conn.commit()
@@ -240,12 +311,23 @@ def manage_barang():
 
         elif barang_choice == '3':
             # Update barang
-            barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin diubah: {Fore.RESET}"))
+            try:
+                barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin diubah: {Fore.RESET}"))
+            except ValueError:
+                print(f"{Fore.RED}ID Barang harus berupa angka.{Fore.RESET}")
+                continue
+            
             nama_barang = input(f"{Fore.CYAN}Masukkan Nama Barang: {Fore.RESET}")
             kategori = input(f"{Fore.CYAN}Masukkan Kategori: {Fore.RESET}")
-            jumlah = int(input(f"{Fore.CYAN}Masukkan Jumlah: {Fore.RESET}"))
+            try:
+                jumlah = int(input(f"{Fore.CYAN}Masukkan Jumlah: {Fore.RESET}"))
+            except ValueError:
+                print(f"{Fore.RED}Jumlah harus berupa angka.{Fore.RESET}")
+                continue
             kondisi = input(f"{Fore.CYAN}Masukkan Kondisi: {Fore.RESET}")
             conn = connect_db()
+            if conn is None:
+                return  # Kembali jika koneksi gagal
             cursor = conn.cursor()
             cursor.execute("UPDATE barang SET nama_barang = %s, kategori = %s, jumlah = %s, kondisi = %s WHERE barang_id = %s", (nama_barang, kategori, jumlah, kondisi, barang_id))
             conn.commit()
@@ -255,8 +337,15 @@ def manage_barang():
 
         elif barang_choice == '4':
             # Hapus barang
-            barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin dihapus: {Fore.RESET}"))
+            try:
+                barang_id = int(input(f"{Fore.CYAN}Masukkan ID Barang yang ingin dihapus: {Fore.RESET}"))
+            except ValueError:
+                print(f"{Fore.RED}ID Barang harus berupa angka.{Fore.RESET}")
+                continue
+            
             conn = connect_db()
+            if conn is None:
+                return  # Kembali jika koneksi gagal
             cursor = conn.cursor()
             cursor.execute("DELETE FROM barang WHERE barang_id = %s", (barang_id,))
             conn.commit()
