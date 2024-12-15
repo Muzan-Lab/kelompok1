@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS peminjaman (
     barang_id INT NOT NULL,
     tanggal_pinjam DATE NOT NULL,
     tanggal_kembali DATE,
+    kondisi_barang VARCHAR(50),
     FOREIGN KEY (peminjam_id) REFERENCES peminjam(peminjam_id),
     FOREIGN KEY (barang_id) REFERENCES barang(barang_id)
 );
