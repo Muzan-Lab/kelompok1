@@ -1,15 +1,22 @@
-Untuk Menjalankan Aplikasi CLI ini ada beberapa Library yang harus di install, yaitu
+# Laboratorium Abal-abal
 
-1. colorama
-2. tabulate
-3. pyfiglet
-4. time
-5. pyttsx3
+Ini adalah projek final dari praktikum Manajemen Informasi Kelompok 1.
 
-cara installnya dengan cara buka command prompt lalu salin bash berikut
+## Library yg digunakan
 
-$pip install colorama
-$pip install tabulate
-$pip install pyfiglet
-$pip install time
-$pip install pyttsx3
+- colorama
+- tabulate
+- time
+- pyfiglet
+- pyttsx3
+
+## Instalasi
+
+Langkah-langkah untuk menginstal dan menyiapkan proyek ini.
+
+```bash
+pip install colorama
+pip install tabulate
+pip install time
+pip install pyfiglet
+pip install pyttsx3
