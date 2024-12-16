@@ -12,7 +12,10 @@ Ini adalah projek final dari praktikum Manajemen Informasi Kelompok 1.
 
 ## Instalasi
 
-Langkah-langkah untuk menginstal dan menyiapkan proyek ini.
+Langkah-langkah untuk install Library.
+
+1. Buka terminal
+2. Ketikkan perintah dibawah ini
 
 ```bash
 pip install colorama
