@@ -170,7 +170,7 @@ def kembalikan_barang():
         print(f"{Fore.RED}Tidak ada peminjaman yang belum dikembalikan.{Fore.RESET}")
         return
     
-    print_table(peminjaman, ["Peminjaman ID", "Peminjam ID", "Barang ID", "Tanggal Pinjam","Tanggal Kembali"])
+    print_table(peminjaman, ["Peminjaman ID", "Peminjam ID", "Barang ID", "Tanggal Pinjam","Tanggal Kembali", "Kondisi Barang"])
     
     try:
         peminjaman_id = int(input(f"{Fore.CYAN}Masukkan ID Peminjaman yang ingin dikembalikan: {Fore.RESET}"))
