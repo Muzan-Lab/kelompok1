@@ -156,6 +156,7 @@ def print_receipt(peminjaman_id, tanggal_kembali, kondisi_barang):
     print(f"{Fore.GREEN}=========================={Fore.RESET}")
 
 # Fungsi untuk mengembalikan barang
+# Fungsi untuk mengembalikan barang
 def kembalikan_barang():
     print(f"{Fore.YELLOW}Daftar Peminjaman Barang yang Belum Dikembalikan:{Fore.RESET}")
     conn = connect_db()
@@ -193,7 +194,7 @@ def kembalikan_barang():
     # Menambah jumlah barang
     cursor.execute("UPDATE barang SET jumlah = jumlah + 1 WHERE barang_id = (SELECT barang_id FROM peminjaman WHERE peminjaman_id = %s)", (peminjaman_id,))
     
-    conn.commit
+    conn.commit()  # Perbaikan: pastikan untuk memanggil commit() dengan benar
     conn.close()
     
     success_message("Barang berhasil dikembalikan!")
