@@ -23,3 +23,5 @@ pip install tabulate
 pip install time
 pip install pyfiglet
 pip install pyttsx3
+
+### Untuk Aplikasi Gui masih dalam tahap pengembangan
